@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simple Code Editor</title>
+</head>
+<body>
+  <h1>Simple Code Editor</h1>
+  <form id="codeForm">
+    <label for="code">Enter your code:</label><br>
+    <textarea id="code" name="code" rows="10" cols="50"></textarea><br>
+    <label for="fileName">Enter file name (optional):</label><br>
+    <input type="text" id="fileName" name="fileName"><br>
+    <label for="runCommand">Enter run command (optional):</label><br>
+    <input type="text" id="runCommand" name="runCommand"><br>
+    <input type="button" value="Save" onclick="saveCode()">
+    <input type="button" value="Run" onclick="runCode()">
+
+    <label for="fileSelect">Load saved file:</label>
+    <select id="fileSelect" onchange="loadFile()">
+      <option value="">Select a file</option>
+    </select>
+  </form>
+
+  <div id="responseMessage"></div>
+
+  <script>
+    async function saveCode() {
+      const code = document.getElementById('code').value;
+      const fileName = document.getElementById('fileName').value;
+
+      const response = await fetch('/save', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `code=${encodeURIComponent(code)}&fileName=${encodeURIComponent(fileName)}`,
+      });
+
+      const result = await response.text();
+      document.getElementById('responseMessage').innerText = result;
+      loadFileList(); // Reload file list after saving
+    }
+
+    async function runCode() {
+      const runCommand = document.getElementById('runCommand').value;
+
+      const response = await fetch('/run', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `runCommand=${encodeURIComponent(runCommand)}`,
+      });
+
+      const result = await response.text();
+      document.getElementById('responseMessage').innerText = result;
+    }
+
+    async function loadFileList() {
+      const response = await fetch('/files');
+      const fileList = await response.json();
+
+      const fileSelect = document.getElementById('fileSelect');
+      fileSelect.innerHTML = '<option value="">Select a file</option>';
+
+      fileList.forEach(file => {
+        const option = document.createElement('option');
+        option.value = file;
+        option.text = file;
+        fileSelect.appendChild(option);
+      });
+    }
+
+    async function loadFile() {
+      const fileName = document.getElementById('fileSelect').value;
+      if (fileName) {
+        const response = await fetch(`/files/${encodeURIComponent(fileName)}`);
+        const code = await response.text();
+        document.getElementById('code').value = code;
+      }
+    }
+
+    // Load file list when the page loads
+    window.onload = loadFileList;
+  </script>
+</body>
+</html>
