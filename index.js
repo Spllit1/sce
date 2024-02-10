@@ -8,8 +8,8 @@ const port = 3000;
 
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Verzeichnis für den Code
 const codeFolder = './Code';
+const runCommandFile = path.join(__dirname, 'runCommand.txt');
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
@@ -18,10 +18,19 @@ app.get('/', (req, res) => {
 app.post('/save', async (req, res) => {
   try {
     const code = req.body.code;
-    const fileName = req.body.fileName || 'savedCode.js'; // Standardname, wenn keiner angegeben ist
-    const filePath = path.join(__dirname, codeFolder, fileName);
+    let fileName = req.body.fileName || 'untitled.txt';
 
-    await fs.mkdir(path.join(__dirname, codeFolder), { recursive: true });
+    const folderPath = path.join(__dirname, codeFolder);
+    await fs.mkdir(folderPath, { recursive: true });
+
+    let fileIndex = 1;
+    while (await fileExists(path.join(folderPath, fileName))) {
+      fileName = `untitled${fileIndex}.txt`;
+      fileIndex++;
+    }
+
+    const filePath = path.join(folderPath, fileName);
+
     await fs.writeFile(filePath, code);
 
     res.send(`Code successfully saved to ${filePath}`);
@@ -31,9 +40,19 @@ app.post('/save', async (req, res) => {
   }
 });
 
+async function fileExists(filePath) {
+  try {
+    await fs.access(filePath);
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
 app.post('/run', async (req, res) => {
   try {
     const runCommand = req.body.runCommand;
+    await fs.writeFile(runCommandFile, JSON.stringify({ runCommand }));
     const result = await runCustomCommand(runCommand);
     res.send(`Command executed successfully:\n${result}`);
   } catch (error) {
@@ -77,6 +96,28 @@ app.get('/files/:fileName', async (req, res) => {
   }
 });
 
+
+app.post('/save-run-command', async (req, res) => {
+  try {
+    const runCommand = req.body.runCommand;
+    await fs.writeFile(runCommandFile, JSON.stringify({ runCommand }));
+    res.send(`Run command successfully saved: ${runCommand}`);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error saving run command');
+  }
+});
+
+app.get('/get-run-command', async (req, res) => {
+  try {
+    const runCommandData = await fs.readFile(runCommandFile, 'utf-8');
+    const { runCommand } = JSON.parse(runCommandData);
+    res.json({ runCommand });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error fetching run command');
+  }
+});
 
 app.listen(port, () => {
   console.log(`Code editor app listening at http://localhost:${port}`);

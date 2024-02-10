@@ -13,19 +13,34 @@
     <label for="fileName">Enter file name (optional):</label><br>
     <input type="text" id="fileName" name="fileName"><br>
     <label for="runCommand">Enter run command (optional):</label><br>
-    <input type="text" id="runCommand" name="runCommand"><br>
-    <input type="button" value="Save" onclick="saveCode()">
+    <input type="text" id="runCommand" name="runCommand">
+    <input type="button" value="Save Run Command" onclick="saveRunCommand()">
     <input type="button" value="Run" onclick="runCode()">
 
     <label for="fileSelect">Load saved file:</label>
     <select id="fileSelect" onchange="loadFile()">
       <option value="">Select a file</option>
     </select>
+    
   </form>
 
   <div id="responseMessage"></div>
 
   <script>
+    async function saveRunCommand() {
+      const runCommand = document.getElementById('runCommand').value;
+    
+      const response = await fetch('/save-run-command', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `runCommand=${encodeURIComponent(runCommand)}`,
+      });
+    
+      const result = await response.text();
+      document.getElementById('responseMessage').innerText = result;
+    }    
     async function saveCode() {
       const code = document.getElementById('code').value;
       const fileName = document.getElementById('fileName').value;
@@ -40,7 +55,7 @@
 
       const result = await response.text();
       document.getElementById('responseMessage').innerText = result;
-      loadFileList(); // Reload file list after saving
+      loadFileList();
     }
 
     async function runCode() {
@@ -82,8 +97,17 @@
       }
     }
 
-    // Load file list when the page loads
-    window.onload = loadFileList;
+    async function loadRunCommand() {
+      const response = await fetch('/get-run-command');
+      const runCommandData = await response.json();
+      const runCommandInput = document.getElementById('runCommand');
+      runCommandInput.value = runCommandData.runCommand || '';
+    }
+
+    window.onload = () => {
+      loadFileList();
+      loadRunCommand(); // Füge diese Zeile hinzu
+    };
   </script>
 </body>
 </html>
