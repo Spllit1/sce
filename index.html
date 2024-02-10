@@ -16,6 +16,8 @@
     <input type="text" id="runCommand" name="runCommand">
     <input type="button" value="Save Run Command" onclick="saveRunCommand()">
     <input type="button" value="Run" onclick="runCode()">
+    <input type="button" value="Save" onclick="saveCode()">
+    <input type="button" value="Run" onclick="runCode()">
 
     <label for="fileSelect">Load saved file:</label>
     <select id="fileSelect" onchange="loadFile()">
@@ -106,7 +108,7 @@
 
     window.onload = () => {
       loadFileList();
-      loadRunCommand(); // Füge diese Zeile hinzu
+      loadRunCommand();
     };
   </script>
 </body>
