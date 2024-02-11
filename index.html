@@ -17,7 +17,6 @@
     <input type="button" value="Save Run Command" onclick="saveRunCommand()">
     <input type="button" value="Run" onclick="runCode()">
     <input type="button" value="Save" onclick="saveCode()">
-    <input type="button" value="Run" onclick="runCode()">
 
     <label for="fileSelect">Load saved file:</label>
     <select id="fileSelect" onchange="loadFile()">
@@ -42,11 +41,18 @@
     
       const result = await response.text();
       document.getElementById('responseMessage').innerText = result;
-    }    
+    } 
+    
+    
+
+
+
+
+
     async function saveCode() {
       const code = document.getElementById('code').value;
-      const fileName = document.getElementById('fileName').value;
-
+      const fileName = document.getElementById('fileName').value || document.getElementById('fileSelect').value; // Use the selected file name if no file name is provided
+    
       const response = await fetch('/save', {
         method: 'POST',
         headers: {
@@ -54,11 +60,17 @@
         },
         body: `code=${encodeURIComponent(code)}&fileName=${encodeURIComponent(fileName)}`,
       });
-
+    
       const result = await response.text();
       document.getElementById('responseMessage').innerText = result;
       loadFileList();
     }
+
+
+
+
+
+
 
     async function runCode() {
       const runCommand = document.getElementById('runCommand').value;

@@ -20,25 +20,31 @@ app.post('/save', async (req, res) => {
     const code = req.body.code;
     let fileName = req.body.fileName || 'untitled.txt';
 
+    // Remove any directory traversal attempts from the filename
+    fileName = path.basename(fileName);
+
+    // Ensure the file extension is present
+    if (!path.extname(fileName)) {
+      fileName += '.txt'; // Default to .txt if no extension is provided
+    }
+
     const folderPath = path.join(__dirname, codeFolder);
     await fs.mkdir(folderPath, { recursive: true });
 
-    let fileIndex = 1;
-    while (await fileExists(path.join(folderPath, fileName))) {
-      fileName = `untitled${fileIndex}.txt`;
-      fileIndex++;
-    }
-
     const filePath = path.join(folderPath, fileName);
 
+    // Write the file directly without checking for existence, overwriting if needed
     await fs.writeFile(filePath, code);
 
-    res.send(`Code successfully saved to ${filePath}`);
+    res.send(`Code successfully saved to ${fileName}`);
   } catch (error) {
     console.error(error);
     res.status(500).send('Error saving code');
   }
 });
+
+
+
 
 async function fileExists(filePath) {
   try {
